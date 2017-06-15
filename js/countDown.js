@@ -14,36 +14,58 @@
       startTime: 0,
       endTime: 0,
       diffTime: 0,
-      callback: function () {}
+      callback: function () {},
+      endCallback: function () {}
     }
 
     for (var key in opts) {
       this[key] = opts[key];
     }
 
-    this.diffTime = this.diffTime ||  (this.endTime - this.startTime); 
-    console.log(this.diffTime);
-    this.init();
+    this.setTime(this.startTime, this.endTime, this.diffTime);
+    this.start();
   };
 
   CountDown.prototype = {
-    init: function () {
-      var _this = this;
-      _this.callback && _this.callback( _this.formatData() );
-      _this.diffTime -= 1000;
-      setTimeout(function() {
-        _this.countDown();
-      }, 1000);      
-    },
-    update: function () {
+    setTime: function (startTime, endTime, diffTime) {
+      this.startTime = startTime || this.startTime;
+      this.endTime = endTime || this.endTime;
+
+      // 传开始时间
+      if (startTime) {
+        this.diffTime =  this.endTime -  this.startTime;
+
+      // 传差值
+      } else if (diffTime) {
+        this.diffTime = diffTime;
       
+      // 静默失败
+      } else {
+        console.log('update error: please check the arguments');
+      }
     },
-    formatData: function () {
-      var t = this.diffTime;
-      var seconds = Math.floor((t / 1000) % 60);
-      var minutes = Math.floor((t / 1000 / 60) % 60);
-      var hours = Math.floor((t / (1000 * 60 * 60)) % 24);
-      var days = Math.floor(t / (1000 * 60 * 60 * 24));
+    start: function () {
+      var _this = this;
+      _this.callback && _this.callback( _this.__formatData() );
+      _this.diffTime -= 1000;
+      if (_this.diffTime > 0) {
+        console.log(_this.diffTime);
+        // 递归timeout
+        this.__timeout = setTimeout(function() {
+          _this.start();
+        }, 1000);
+      
+      // 倒数到0
+      } else {
+        _this.endCallback &&  _this.endCallback();
+      }
+    },
+    __formatData: function () {
+      var t = this.diffTime / 1000;
+      var days = Math.floor(t / (60 * 60 * 24));
+      var hours = Math.floor((t / (60 * 60)) % 24);
+      var minutes = Math.floor((t / 60) % 60);
+      var seconds = Math.floor(t % 60);
       days = days.toString();
       
       var data = {
@@ -57,22 +79,22 @@
         if (key === 'days') {
           data[key] = data[key].toString();
         } else {
-          data[key] = this.leftPad(data[key]);
+          data[key] = this.__leftPad(data[key]);
         }
 
-        data[key] = this.splitData(data[key]);
+        data[key] = this.__splitData(data[key]);
       }
 
       return data;
     },
-    leftPad: function (arg) {
+    __leftPad: function (arg) {
       var str = arg.toString();
       if (str.length < 2) {
         return '0' + str;
       } 
       return str;
     },
-    splitData: function (originData) {
+    __splitData: function (originData) {
       var dataArr = [];
       dataArr.push(originData);
       dataArr = dataArr.concat(originData.split(''));
