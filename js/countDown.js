@@ -49,7 +49,7 @@
       _this.callback && _this.callback( _this.__formatData() );
       _this.diffTime -= 1000;
       if (_this.diffTime > 0) {
-        console.log(_this.diffTime);
+        // console.log(_this.diffTime);
         // 递归timeout
         this.__timeout = setTimeout(function() {
           _this.start();
